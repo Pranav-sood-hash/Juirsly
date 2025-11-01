@@ -32,6 +32,8 @@
             "@radix-ui/react-tooltip": "^1.1.8",
             "@supabase/supabase-js": "^2.78.0",
             "@tailwindcss/postcss": "^4.1.16",
+            "@types/react": "^19.2.2",
+            "@types/react-dom": "^19.2.2",
             "autoprefixer": "^10.4.21",
             "class-variance-authority": "^0.7.1",
             "clsx": "*",

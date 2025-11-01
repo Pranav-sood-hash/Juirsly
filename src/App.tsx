@@ -9,7 +9,7 @@ import { SettingsPage } from './components/SettingsPage';
 import { ProfilePage } from './components/ProfilePage';
 import { ResetPassword } from './components/ResetPassword';
 import { EmailVerification } from './components/EmailVerification';
-import { Toaster } from 'sonner@2.0.3';
+import { Toaster } from 'sonner';
 import { AnimatePresence } from 'motion/react';
 
 type Page = 'login' | 'signup' | 'chat' | 'reset-password' | 'verify-email';
