@@ -35,8 +35,8 @@ export function Navbar({ onNavigateHome, onNavigateProfile, onNavigateSettings, 
   const { logout, user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const handleNavClick = (callback: () => void) => {
-    callback();
+  const handleNavClick = async (callback: () => void | Promise<void>) => {
+    await callback();
     setIsMobileMenuOpen(false);
   };
 
@@ -93,7 +93,7 @@ export function Navbar({ onNavigateHome, onNavigateProfile, onNavigateSettings, 
 
               {/* Logout Button */}
               <button
-                onClick={logout}
+                onClick={() => logout()}
                 className="text-white/70 hover:text-red-400 transition-colors flex items-center gap-2"
                 title="Logout"
               >

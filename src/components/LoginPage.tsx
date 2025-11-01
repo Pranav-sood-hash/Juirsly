@@ -16,7 +16,7 @@ export function LoginPage({ onSwitchToSignup }: LoginPageProps) {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { login } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
@@ -24,7 +24,7 @@ export function LoginPage({ onSwitchToSignup }: LoginPageProps) {
       return;
     }
 
-    const success = login(email, password);
+    const success = await login(email, password);
     if (success) {
       toast.success('Welcome back to Jurisly!');
     } else {

@@ -15,7 +15,7 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const { signup } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name || !email || !password || !confirmPassword) {
@@ -33,7 +33,7 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
       return;
     }
 
-    const success = signup(email, password, name);
+    const success = await signup(email, password, name);
     if (success) {
       toast.success('Account created successfully!');
     } else {

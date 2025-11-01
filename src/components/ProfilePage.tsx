@@ -132,13 +132,8 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
 
   const currentAvatar = getAvatarDisplay(user?.avatar || '');
 
-  const handleSaveProfile = () => {
-    /* --- Avatar Storage Logic Here ---
-       Save selected avatar to user profile
-       Update across all components (navbar, chat, etc.)
-       In production, sync with backend/database
-    --- */
-    updateUserProfile({
+  const handleSaveProfile = async () => {
+    await updateUserProfile({
       avatar: selectedAvatar,
       dateOfBirth: dateOfBirth,
     });
@@ -147,18 +142,13 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
     setEditSection(null);
   };
 
-  const handlePasswordChange = () => {
+  const handlePasswordChange = async () => {
     if (newPassword !== confirmPassword) {
       toast.error(t.passwordMismatch);
       return;
     }
 
-    /* --- Password Verification and Update Logic Here ---
-       Validate current password against stored/database password
-       Update to new password securely
-       In production, use backend API with encryption
-    --- */
-    const success = updatePassword(currentPassword, newPassword);
+    const success = await updatePassword(currentPassword, newPassword);
     
     if (success) {
       toast.success(t.passwordUpdated);
