@@ -8,37 +8,44 @@ import { ChatPage } from './components/ChatPage';
 import { SettingsPage } from './components/SettingsPage';
 import { ProfilePage } from './components/ProfilePage';
 import { ResetPassword } from './components/ResetPassword';
+import { EmailVerification } from './components/EmailVerification';
 import { Toaster } from 'sonner@2.0.3';
 import { AnimatePresence } from 'motion/react';
 
-type Page = 'login' | 'signup' | 'chat' | 'reset-password';
+type Page = 'login' | 'signup' | 'chat' | 'reset-password' | 'verify-email';
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
   const [currentPage, setCurrentPage] = useState<Page>('login');
   const [showSettings, setShowSettings] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [resetToken, setResetToken] = useState<string | null>(null);
 
-  // Check for reset password token in URL
+  // Check for auth-related URL hash parameters (Supabase uses hash fragments)
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-    if (token) {
-      setResetToken(token);
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get('type');
+    
+    // Handle email verification
+    if (type === 'signup') {
+      setCurrentPage('verify-email');
+      return;
+    }
+    
+    // Handle password reset
+    if (type === 'recovery') {
       setCurrentPage('reset-password');
+      return;
     }
   }, []);
 
-  // If not authenticated, show login/signup/reset password
+  // If not authenticated, show login/signup/reset password/verify email
   if (!isAuthenticated) {
     return (
       <>
-        {currentPage === 'reset-password' && resetToken ? (
-          <ResetPassword
-            token={resetToken}
-            onSuccess={() => setCurrentPage('login')}
-          />
+        {currentPage === 'verify-email' ? (
+          <EmailVerification onVerified={() => setCurrentPage('login')} />
+        ) : currentPage === 'reset-password' ? (
+          <ResetPassword onSuccess={() => setCurrentPage('login')} />
         ) : currentPage === 'login' ? (
           <LoginPage onSwitchToSignup={() => setCurrentPage('signup')} />
         ) : (

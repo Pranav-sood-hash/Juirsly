@@ -24,11 +24,11 @@ export function LoginPage({ onSwitchToSignup }: LoginPageProps) {
       return;
     }
 
-    const success = await login(email, password);
-    if (success) {
+    const result = await login(email, password);
+    if (result.success) {
       toast.success('Welcome back to Jurisly!');
     } else {
-      toast.error('Invalid email or password');
+      toast.error(result.message || 'Invalid email or password');
     }
   };
 

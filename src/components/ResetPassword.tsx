@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Lock, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ResetPasswordProps {
-  token: string;
   onSuccess: () => void;
 }
 
-export function ResetPassword({ token, onSuccess }: ResetPasswordProps) {
+export function ResetPassword({ onSuccess }: ResetPasswordProps) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -17,34 +17,24 @@ export function ResetPassword({ token, onSuccess }: ResetPasswordProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong'>('weak');
+  const { updatePasswordWithToken } = useAuth();
 
   useEffect(() => {
-    // Verify token exists
-    const resetTokens = localStorage.getItem('jurisly_reset_tokens');
-    if (!resetTokens) {
-      setTokenValid(false);
-      return;
-    }
+    // Check if we have a valid session from the password reset link
+    // Supabase automatically handles the token from the URL hash
+    const checkSession = async () => {
+      // The session is automatically set by Supabase when user clicks the reset link
+      // We just need to verify we're in a password reset flow
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const type = hashParams.get('type');
+      
+      if (type !== 'recovery') {
+        setTokenValid(false);
+      }
+    };
 
-    const tokens = JSON.parse(resetTokens);
-    const tokenData = tokens[token];
-
-    if (!tokenData) {
-      setTokenValid(false);
-      return;
-    }
-
-    // Check if token is not expired (24 hours)
-    const tokenAge = Date.now() - tokenData.timestamp;
-    if (tokenAge > 24 * 60 * 60 * 1000) {
-      setTokenValid(false);
-      delete tokens[token];
-      localStorage.setItem('jurisly_reset_tokens', JSON.stringify(tokens));
-      return;
-    }
-
-    setTokenValid(true);
-  }, [token]);
+    checkSession();
+  }, []);
 
   const calculatePasswordStrength = (password: string) => {
     if (!password) {
@@ -90,61 +80,19 @@ export function ResetPassword({ token, onSuccess }: ResetPasswordProps) {
     setIsLoading(true);
 
     try {
-      /* --- Reset Password API Call ---
-         Makes request to backend to update password with token
-         In production, connect to your backend:
-         const response = await fetch('/api/auth/reset-password', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({ token, newPassword })
-         });
-      --- */
+      const result = await updatePasswordWithToken(newPassword);
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      if (result.success) {
+        toast.success(result.message || 'Password reset successfully!');
+        setIsSuccess(true);
 
-      // Get token data for email
-      const resetTokens = localStorage.getItem('jurisly_reset_tokens');
-      if (!resetTokens) {
-        toast.error('Invalid reset token');
-        setIsLoading(false);
-        return;
+        // Redirect to login after 2 seconds
+        setTimeout(() => {
+          onSuccess();
+        }, 2000);
+      } else {
+        toast.error(result.message || 'Failed to reset password. Please try again.');
       }
-
-      const tokens = JSON.parse(resetTokens);
-      const tokenData = tokens[token];
-
-      if (!tokenData) {
-        toast.error('Invalid reset token');
-        setIsLoading(false);
-        return;
-      }
-
-      const email = tokenData.email;
-
-      // Update password in localStorage (demo)
-      const storedUsers = localStorage.getItem('jurisly_users');
-      if (storedUsers) {
-        const users = JSON.parse(storedUsers);
-        const userIndex = users.findIndex((u: any) => u.email === email);
-
-        if (userIndex !== -1) {
-          users[userIndex].password = newPassword;
-          localStorage.setItem('jurisly_users', JSON.stringify(users));
-        }
-      }
-
-      // Remove used token
-      delete tokens[token];
-      localStorage.setItem('jurisly_reset_tokens', JSON.stringify(tokens));
-
-      toast.success('Password reset successfully!');
-      setIsSuccess(true);
-
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        onSuccess();
-      }, 2000);
     } catch (error) {
       toast.error('Failed to reset password. Please try again.');
     } finally {
