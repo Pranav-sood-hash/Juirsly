@@ -8,6 +8,17 @@ AI Legal Assistant is a React-based web application designed to provide legal as
 ## Recent Changes
 *Last updated: November 1, 2025*
 
+### Fixed "Failed to Fetch" Errors (November 1, 2025)
+- **Resolved authentication errors** caused by missing Supabase credentials
+- **Added localStorage fallback** for authentication when Supabase is not configured
+- **Dual-mode authentication system**:
+  - When Supabase credentials are configured: Uses Supabase Auth
+  - When Supabase credentials are missing: Uses localStorage (demo mode)
+- **All auth features work in both modes**: login, signup, logout, profile updates, password management
+- **No more "Failed to fetch" errors** on login/signup attempts
+- **Smooth user experience** with automatic detection and mode switching
+- **Note**: localStorage mode is for development/demo only. Use Supabase for production.
+
 ### n8n Webhook Integration (November 1, 2025)
 - **Implemented production n8n webhook** for AI responses in `src/components/ChatPage.tsx`
 - **Webhook URL**: https://chaiwala123.app.n8n.cloud/webhook/legal-ai
