@@ -10,13 +10,15 @@ AI Legal Assistant is a React-based web application designed to provide legal as
 
 ### Initial Replit Setup
 - Configured Vite to run on port 5000 with proper host settings (0.0.0.0) for Replit proxy compatibility
+- **Critical Fix**: Added `allowedHosts: true` to vite.config.ts to allow Replit's dynamic preview URLs
 - Added HMR configuration for WebSocket connections through Replit's proxy
 - Created TypeScript configuration files (tsconfig.json, tsconfig.node.json)
-- Installed missing dependencies: tailwindcss, autoprefixer, postcss, typescript
-- Created Tailwind CSS and PostCSS configuration files
+- Installed missing dependencies: tailwindcss, autoprefixer, postcss, typescript, @tailwindcss/postcss
+- Created Tailwind CSS and PostCSS configuration files (upgraded to Tailwind CSS v4)
 - Updated .gitignore to include build artifacts and environment files
 - Added "type": "module" to package.json for ES module support
 - Configured development workflow to run on port 5000 with webview output
+- Configured deployment for autoscale with Vite preview mode
 
 ## Project Architecture
 
@@ -82,6 +84,7 @@ Currently uses **localStorage** for:
 ### Vite Configuration
 - Host: 0.0.0.0 (required for Replit)
 - Port: 5000 (Replit's standard web preview port)
+- **allowedHosts: true** (required for Replit's dynamic preview URLs)
 - HMR: Configured for WebSocket connections through Replit proxy
 - Build target: ESNext
 
