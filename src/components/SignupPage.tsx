@@ -33,11 +33,11 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
       return;
     }
 
-    const success = await signup(email, password, name);
-    if (success) {
-      toast.success('Account created successfully!');
+    const result = await signup(email, password, name);
+    if (result.success) {
+      toast.success(result.message || 'Account created successfully! Please check your email to verify your account.');
     } else {
-      toast.error('Email already exists');
+      toast.error(result.message || 'Failed to create account. Please try again.');
     }
   };
 

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ForgotPasswordProps {
   onClose: () => void;
@@ -12,6 +13,7 @@ export function ForgotPassword({ onClose, onBackToLogin }: ForgotPasswordProps) 
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const { resetPassword } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,47 +31,16 @@ export function ForgotPassword({ onClose, onBackToLogin }: ForgotPasswordProps) 
     setIsLoading(true);
 
     try {
-      /* --- Forgot Password API Call ---
-         Makes request to backend to send password reset email
-         In production, connect to your backend:
-         const response = await fetch('/api/auth/forgot-password', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({ email })
-         });
-      --- */
+      const result = await resetPassword(email);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Check if user exists in localStorage (demo)
-      const storedUsers = localStorage.getItem('jurisly_users');
-      if (!storedUsers) {
-        toast.error('No users found. Please sign up first.');
-        setIsLoading(false);
-        return;
-      }
-
-      const users = JSON.parse(storedUsers);
-      const userExists = users.some((u: any) => u.email === email);
-
-      if (!userExists) {
-        // Don't reveal if email exists for security
-        toast.error('If this email is registered, you will receive a reset link.');
+      if (result.success) {
+        toast.success(result.message || 'Password reset email sent!');
         setIsSubmitted(true);
-        return;
+      } else {
+        // For security, still show success message even if email doesn't exist
+        toast.success('If this email is registered, you will receive a reset link.');
+        setIsSubmitted(true);
       }
-
-      // In production, backend would send email with reset link
-      // For demo, generate a mock token and store it
-      const mockToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      const resetTokens = localStorage.getItem('jurisly_reset_tokens') || '{}';
-      const tokens = JSON.parse(resetTokens);
-      tokens[mockToken] = { email, timestamp: Date.now() };
-      localStorage.setItem('jurisly_reset_tokens', JSON.stringify(tokens));
-
-      toast.success('Check your email for the password reset link');
-      setIsSubmitted(true);
     } catch (error) {
       toast.error('Failed to send reset email. Please try again.');
     } finally {

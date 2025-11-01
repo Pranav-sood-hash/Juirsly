@@ -7,16 +7,20 @@ interface User {
   avatar?: string;
   dateOfBirth?: string;
   accountType?: string;
+  emailVerified?: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  signup: (email: string, password: string, name: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  signup: (email: string, password: string, name: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   updateUserProfile: (updates: Partial<User>) => Promise<boolean>;
   updatePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
+  resetPassword: (email: string) => Promise<{ success: boolean; message?: string }>;
+  updatePasswordWithToken: (newPassword: string) => Promise<{ success: boolean; message?: string }>;
+  resendVerificationEmail: () => Promise<{ success: boolean; message?: string }>;
   loading: boolean;
 }
 
@@ -37,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           avatar: session.user.user_metadata?.avatar,
           dateOfBirth: session.user.user_metadata?.dateOfBirth,
           accountType: session.user.user_metadata?.accountType,
+          emailVerified: !!session.user.email_confirmed_at,
         });
       }
       setLoading(false);
@@ -53,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           avatar: session.user.user_metadata?.avatar,
           dateOfBirth: session.user.user_metadata?.dateOfBirth,
           accountType: session.user.user_metadata?.accountType,
+          emailVerified: !!session.user.email_confirmed_at,
         });
       } else {
         setUser(null);
@@ -63,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -72,28 +78,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Login error:', error.message);
-        return false;
+        
+        // Check for specific error types
+        if (error.message.includes('Email not confirmed')) {
+          return { success: false, message: 'Please verify your email before logging in. Check your inbox for the verification link.' };
+        }
+        
+        return { success: false, message: error.message };
       }
 
       if (data.user) {
+        // Check if email is verified
+        if (!data.user.email_confirmed_at) {
+          await supabase.auth.signOut();
+          return { success: false, message: 'Please verify your email before logging in. Check your inbox for the verification link.' };
+        }
+
         setUser({
           email: data.user.email || '',
           name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
           avatar: data.user.user_metadata?.avatar,
           dateOfBirth: data.user.user_metadata?.dateOfBirth,
           accountType: data.user.user_metadata?.accountType,
+          emailVerified: !!data.user.email_confirmed_at,
         });
-        return true;
+        return { success: true };
       }
 
-      return false;
+      return { success: false, message: 'Login failed. Please try again.' };
     } catch (error) {
       console.error('Login error:', error);
-      return false;
+      return { success: false, message: 'An unexpected error occurred. Please try again.' };
     }
   };
 
-  const signup = async (email: string, password: string, name: string): Promise<boolean> => {
+  const signup = async (email: string, password: string, name: string): Promise<{ success: boolean; message?: string }> => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -102,29 +121,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           data: {
             name,
           },
+          emailRedirectTo: `${window.location.origin}/auth/verify`,
         },
       });
 
       if (error) {
         console.error('Signup error:', error.message);
-        return false;
+        return { success: false, message: error.message };
       }
 
       if (data.user) {
-        setUser({
-          email: data.user.email || '',
-          name: name,
-          avatar: data.user.user_metadata?.avatar,
-          dateOfBirth: data.user.user_metadata?.dateOfBirth,
-          accountType: data.user.user_metadata?.accountType,
-        });
-        return true;
+        // Note: User is created but not authenticated until email is verified
+        // Don't set user state here - they need to verify email first
+        return { 
+          success: true, 
+          message: 'Account created! Please check your email to verify your account before logging in.' 
+        };
       }
 
-      return false;
+      return { success: false, message: 'Signup failed. Please try again.' };
     } catch (error) {
       console.error('Signup error:', error);
-      return false;
+      return { success: false, message: 'An unexpected error occurred. Please try again.' };
     }
   };
 
@@ -193,6 +211,73 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const resetPassword = async (email: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+
+      if (error) {
+        console.error('Password reset error:', error.message);
+        return { success: false, message: error.message };
+      }
+
+      return { 
+        success: true, 
+        message: 'Password reset email sent! Check your inbox for the reset link.' 
+      };
+    } catch (error) {
+      console.error('Password reset error:', error);
+      return { success: false, message: 'An unexpected error occurred. Please try again.' };
+    }
+  };
+
+  const updatePasswordWithToken = async (newPassword: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        console.error('Password update error:', error.message);
+        return { success: false, message: error.message };
+      }
+
+      return { success: true, message: 'Password updated successfully!' };
+    } catch (error) {
+      console.error('Password update error:', error);
+      return { success: false, message: 'An unexpected error occurred. Please try again.' };
+    }
+  };
+
+  const resendVerificationEmail = async (): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user?.email) {
+        return { success: false, message: 'No user session found.' };
+      }
+
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: session.user.email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/verify`,
+        },
+      });
+
+      if (error) {
+        console.error('Resend verification error:', error.message);
+        return { success: false, message: error.message };
+      }
+
+      return { success: true, message: 'Verification email sent! Check your inbox.' };
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      return { success: false, message: 'An unexpected error occurred. Please try again.' };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -203,6 +288,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         updateUserProfile,
         updatePassword,
+        resetPassword,
+        updatePasswordWithToken,
+        resendVerificationEmail,
         loading,
       }}
     >
