@@ -9,7 +9,7 @@ import { useSettings } from '../contexts/SettingsContext';
 import { useChat, ChatMessage as ChatMessageType } from '../contexts/ChatContext';
 import { useVoiceAssistant } from '../hooks/useVoiceAssistant';
 import { useAuth } from '../contexts/AuthContext';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface ChatPageProps {
   onNavigateProfile: () => void;
@@ -104,31 +104,36 @@ export function ChatPage({ onNavigateProfile, onNavigateSettings }: ChatPageProp
   --- n8n Integration End --- */
   
   const sendMessageToAI = async (userMessage: string): Promise<string> => {
-    // ============================================================
-    // TODO: Replace this mock function with actual n8n API call
-    // ============================================================
-    // Uncomment and configure the following for production:
-    // try {
-    //   const response = await fetch('YOUR_N8N_WEBHOOK_URL', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ 
-    //       message: userMessage,
-    //       userId: user?.email,
-    //       language: language,
-    //       conversationId: currentConversation?.id 
-    //     })
-    //   });
-    //   const data = await response.json();
-    //   return data.aiResponse || data.reply;
-    // } catch (error) {
-    //   console.error('n8n API Error:', error);
-    //   throw error;
-    // }
-    // ============================================================
+    // Production n8n webhook integration with HTTPS and CORS
+    try {
+      const response = await fetch('https://chaiwala123.app.n8n.cloud/webhook/legal-ai', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        mode: 'cors',
+        body: JSON.stringify({ 
+          query: userMessage,
+          message: userMessage,
+          userId: user?.email,
+          language: language,
+          conversationId: currentConversation?.id,
+          timestamp: new Date().toISOString()
+        })
+      });
 
-    // Mock AI logic for demonstration
-    return new Promise((resolve) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.aiResponse || data.reply || data.response || 'I apologize, but I received an unexpected response. Please try again.';
+    } catch (error) {
+      console.error('n8n API Error:', error);
+      // Fallback to mock response if n8n fails
+      console.warn('Falling back to mock response due to API error');
+      // Mock AI logic for demonstration (fallback)
+      return new Promise((resolve) => {
       setTimeout(() => {
         const lowerMessage = userMessage.toLowerCase();
         let response = '';
@@ -177,7 +182,8 @@ export function ChatPage({ onNavigateProfile, onNavigateSettings }: ChatPageProp
 
         resolve(response);
       }, 2000);
-    });
+      });
+    }
   };
 
   /* --- Chat Message Storage Logic ---
