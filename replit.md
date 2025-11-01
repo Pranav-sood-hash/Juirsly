@@ -8,6 +8,20 @@ AI Legal Assistant is a React-based web application designed to provide legal as
 ## Recent Changes
 *Last updated: November 1, 2025*
 
+### Supabase Backend Integration (November 1, 2025)
+- **Installed @supabase/supabase-js** package for backend integration
+- **Created Supabase client** configuration in `src/lib/supabase.ts`
+- **Migrated AuthContext** from localStorage to Supabase authentication:
+  - Login, signup, and logout now use Supabase Auth API
+  - Session management with automatic state synchronization
+  - Secure password updates with verification
+  - Profile updates stored in Supabase user metadata
+- **Updated all auth-related components** to handle async operations:
+  - LoginPage, SignupPage, ProfilePage, and Navbar
+- **Added TypeScript definitions** for Vite environment variables
+- **Configured secure credential management** via Replit Secrets
+- All authentication methods include proper error handling and user feedback
+
 ### Initial Replit Setup
 - Configured Vite to run on port 5000 with proper host settings (0.0.0.0) for Replit proxy compatibility
 - **Critical Fix**: Added `allowedHosts: true` to vite.config.ts to allow Replit's dynamic preview URLs
@@ -26,6 +40,7 @@ AI Legal Assistant is a React-based web application designed to provide legal as
 - **Frontend Framework**: React 18.3.1
 - **Build Tool**: Vite 6.3.5
 - **Language**: TypeScript
+- **Backend**: Supabase (Authentication & Database)
 - **Styling**: Tailwind CSS with custom theme variables
 - **UI Components**: Radix UI primitives + custom components
 - **State Management**: React Context (Auth, Settings, Chat)
@@ -52,25 +67,26 @@ src/
 ```
 
 ### Key Features
-- **Authentication System**: Login, signup, password reset (currently using localStorage)
+- **Authentication System**: Login, signup, password reset powered by **Supabase Auth**
 - **Chat Interface**: AI-powered legal assistant with conversation history
 - **Voice Assistant**: Microphone integration for voice queries
 - **Multi-language Support**: English and Hindi
 - **Dark/Light Theme**: Theme switching with next-themes
 - **Settings Management**: User preferences and configuration
-- **Profile Management**: User profile viewing and editing
+- **Profile Management**: User profile viewing and editing with Supabase storage
 
 ### Data Storage
-Currently uses **localStorage** for:
-- User authentication data
-- Chat conversation history
-- User settings and preferences
+- **User Authentication**: Managed by **Supabase Auth** with secure session handling
+- **User Profiles**: Stored in Supabase user metadata (avatar, date of birth, account type)
+- **Chat conversation history**: Currently localStorage (migration to Supabase planned)
+- **User settings and preferences**: Currently localStorage (migration to Supabase planned)
 
-**Production Consideration**: The codebase includes placeholders for integrating with backend APIs for proper data persistence.
-
-### External Integrations (Planned)
-- **n8n Webhook**: For AI response generation (see N8N_INTEGRATION_GUIDE.md)
-- **Backend API**: For authentication, data persistence, and user management
+### External Integrations
+- **Supabase**: Backend-as-a-Service for authentication and database (ACTIVE)
+  - Project URL: Configured via `VITE_SUPABASE_URL` environment variable
+  - Anonymous key: Secured via `VITE_SUPABASE_ANON_KEY` environment variable
+  - Client configuration: `src/lib/supabase.ts`
+- **n8n Webhook**: For AI response generation (see N8N_INTEGRATION_GUIDE.md) (PLANNED)
 
 ### Development
 - **Dev Server**: Runs on port 5000 (configured for Replit)
@@ -88,11 +104,13 @@ Currently uses **localStorage** for:
 - HMR: Configured for WebSocket connections through Replit proxy
 - Build target: ESNext
 
-### Environment Variables (Optional)
-The application supports the following environment variables:
-- `VITE_N8N_WEBHOOK_URL`: n8n webhook endpoint for AI responses
-- `VITE_BACKEND_API_URL`: Backend API URL for production
-- `VITE_API_KEY`: API key for external services
+### Environment Variables
+The application requires the following environment variables:
+- `VITE_SUPABASE_URL`: Supabase project URL (REQUIRED - stored in Replit Secrets)
+- `VITE_SUPABASE_ANON_KEY`: Supabase anonymous/public key (REQUIRED - stored in Replit Secrets)
+- `VITE_N8N_WEBHOOK_URL`: n8n webhook endpoint for AI responses (OPTIONAL)
+
+**Important**: Environment variables are managed through Replit Secrets for security. A local `.env` file is auto-generated from secrets for Vite development use.
 
 ## Documentation Files
 - `IMPLEMENTATION_SUMMARY.md`: Feature implementation details
