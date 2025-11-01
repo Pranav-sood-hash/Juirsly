@@ -8,6 +8,18 @@ AI Legal Assistant is a React-based web application designed to provide legal as
 ## Recent Changes
 *Last updated: November 1, 2025*
 
+### n8n Webhook Integration (November 1, 2025)
+- **Implemented production n8n webhook** for AI responses in `src/components/ChatPage.tsx`
+- **Webhook URL**: https://chaiwala123.app.n8n.cloud/webhook/legal-ai
+- **HTTPS and CORS Configuration**:
+  - All API calls use HTTPS (no HTTP endpoints)
+  - Proper CORS configuration with `mode: 'cors'` in fetch requests
+  - Content-Type set to `application/json`
+- **Request Payload**: Includes query, message, userId, language, conversationId, and timestamp
+- **Response Handling**: Checks multiple response fields (aiResponse, reply, response) for flexibility
+- **Error Handling**: Graceful fallback to mock responses if n8n webhook is unavailable
+- **Status**: Production-ready and tested with dev server running on port 5000
+
 ### Supabase Backend Integration (November 1, 2025)
 - **Installed @supabase/supabase-js** package for backend integration
 - **Created Supabase client** configuration in `src/lib/supabase.ts`
@@ -86,7 +98,11 @@ src/
   - Project URL: Configured via `VITE_SUPABASE_URL` environment variable
   - Anonymous key: Secured via `VITE_SUPABASE_ANON_KEY` environment variable
   - Client configuration: `src/lib/supabase.ts`
-- **n8n Webhook**: For AI response generation (see N8N_INTEGRATION_GUIDE.md) (PLANNED)
+- **n8n Webhook**: For AI response generation (ACTIVE)
+  - Webhook URL: https://chaiwala123.app.n8n.cloud/webhook/legal-ai (hardcoded in `src/components/ChatPage.tsx`)
+  - HTTPS with proper CORS configuration
+  - Graceful fallback to mock responses on failure
+  - See N8N_INTEGRATION_GUIDE.md for implementation details
 
 ### Development
 - **Dev Server**: Runs on port 5000 (configured for Replit)
@@ -108,7 +124,8 @@ src/
 The application requires the following environment variables:
 - `VITE_SUPABASE_URL`: Supabase project URL (REQUIRED - stored in Replit Secrets)
 - `VITE_SUPABASE_ANON_KEY`: Supabase anonymous/public key (REQUIRED - stored in Replit Secrets)
-- `VITE_N8N_WEBHOOK_URL`: n8n webhook endpoint for AI responses (OPTIONAL)
+
+**Note**: The n8n webhook URL is hardcoded directly in `src/components/ChatPage.tsx` for production use.
 
 **Important**: Environment variables are managed through Replit Secrets for security. A local `.env` file is auto-generated from secrets for Vite development use.
 
