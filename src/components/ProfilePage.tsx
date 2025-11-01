@@ -133,13 +133,18 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
   const currentAvatar = getAvatarDisplay(user?.avatar || '');
 
   const handleSaveProfile = async () => {
-    await updateUserProfile({
+    const success = await updateUserProfile({
       avatar: selectedAvatar,
       dateOfBirth: dateOfBirth,
     });
-    toast.success(t.profileUpdated);
-    setIsEditMode(false);
-    setEditSection(null);
+    
+    if (success) {
+      toast.success(t.profileUpdated);
+      setIsEditMode(false);
+      setEditSection(null);
+    } else {
+      toast.error('Failed to update profile. Please try again.');
+    }
   };
 
   const handlePasswordChange = async () => {

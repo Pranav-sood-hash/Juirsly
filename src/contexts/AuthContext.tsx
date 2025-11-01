@@ -15,7 +15,7 @@ interface AuthContextType {
   signup: (email: string, password: string, name: string) => Promise<boolean>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
-  updateUserProfile: (updates: Partial<User>) => Promise<void>;
+  updateUserProfile: (updates: Partial<User>) => Promise<boolean>;
   updatePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
   loading: boolean;
 }
@@ -140,8 +140,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateUserProfile = async (updates: Partial<User>): Promise<void> => {
-    if (!user) return;
+  const updateUserProfile = async (updates: Partial<User>): Promise<boolean> => {
+    if (!user) return false;
 
     try {
       const { error } = await supabase.auth.updateUser({
@@ -150,12 +150,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Profile update error:', error.message);
-        return;
+        return false;
       }
 
       setUser({ ...user, ...updates });
+      return true;
     } catch (error) {
       console.error('Profile update error:', error);
+      return false;
     }
   };
 
